@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Personagens - Sonata</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #b8b8b8;
+            font-size: 1.1em;
+        }
+
+        .class-selection {
+            margin-bottom: 40px;
+        }
+
+        .class-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .class-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .class-card:hover {
+            transform: translateY(-5px);
+            border-color: #ffd700;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .class-card.selected {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.15);
+        }
+
+        .class-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .class-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .class-domains {
+            font-size: 0.9em;
+            color: #b8b8b8;
+        }
+
+        .character-sheet {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            display: none;
+        }
+
+        .character-sheet.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #ffd700;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.9em;
+            color: #b8b8b8;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 10px;
+            color: #e4e4e4;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .attributes-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+        }
+
+        .attribute-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .attribute-name {
+            font-size: 0.85em;
+            color: #b8b8b8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .attribute-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .attribute-input {
+            width: 60px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .calculated-value {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .weapons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .weapon-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .weapon-title {
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .features-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .feature-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .feature-name {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .feature-description {
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #c8c8c8;
+        }
+
+        .gold-tracker {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .gold-box {
+            text-align: center;
+        }
+
+        .gold-label {
+            font-size: 0.9em;
+            color: #b8b8b8;
+            margin-bottom: 5px;
+        }
+
+        .gold-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1a1a2e;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e4e4e4;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .info-box {
+            background: rgba(100, 150, 255, 0.1);
+            border-left: 4px solid #6496ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .warning-box {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .attributes-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .inventory-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .inventory-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-btn {
+            background: rgba(255, 100, 100, 0.3);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .add-btn {
+            background: rgba(100, 255, 100, 0.3);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚔️ Gerador de Personagens - Sonata ⚔️</h1>
+            <p class="subtitle">Canções do Mar Interno</p>
+        </header>
+
+        <div class="class-selection">
+            <div class="section">
+                <h2 class="section-title">Escolha sua Classe</h2>
+                <div class="class-grid" id="classGrid"></div>
+            </div>
+        </div>
+
+        <div class="character-sheet" id="characterSheet">
+            <!-- Informações Básicas -->
+            <div class="section">
+                <h2 class="section-title">Informações Básicas</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="charName">Nome do Personagem</label>
+                        <input type="text" id="charName" placeholder="Digite o nome">
+                    </div>
+                    <div class="form-group">
+                        <label for="ancestry">Ancestralidade</label>
+                        <input type="text" id="ancestry" placeholder="Ex: Humano">
+                    </div>
+                    <div class="form-group">
+                        <label for="community">Comunidade</label>
+                        <input type="text" id="community" placeholder="Ex: Val Cadma">
+                    </div>
+                    <div class="form-group">
+                        <label for="pronouns">Pronomes</label>
+                        <input type="text" id="pronouns" placeholder="Ex: ele/dele">
+                    </div>
+                    <div class="form-group">
+                        <label for="subclass">Subclasse</label>
+                        <input type="text" id="subclass" placeholder="Subclasse">
+                    </div>
+                    <div class="form-group">
+                        <label for="level">Nível</label>
+                        <input type="number" id="level" value="1" min="1" max="10">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atributos -->
+            <div class="section">
+                <h2 class="section-title">Atributos</h2>
+                <div class="info-box">
+                    💡 Os valores sugeridos já foram preenchidos, mas você pode alterá-los conforme desejar.
+                </div>
+                <div class="attributes-grid" id="attributesGrid"></div>
+            </div>
+
+            <!-- Valores Calculados -->
+            <div class="section">
+                <h2 class="section-title">Valores de Combate</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="evasion">Evasão</label>
+                        <input type="number" id="evasion" class="calculated-value" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="proficiency">Proficiência</label>
+                        <input type="number" id="proficiency" class="calculated-value" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="armorScore">Armadura (Pontuação)</label>
+                        <input type="number" id="armorScore" class="calculated-value" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="threshold1">Limiar 1 (Dano Menor)</label>
+                        <input type="number" id="threshold1" class="calculated-value" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="threshold2">Limiar 2 (Dano Maior)</label>
+                        <input type="number" id="threshold2" class="calculated-value" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="threshold3">Limiar 3 (Dano Severo)</label>
+                        <input type="number" id="threshold3" class="calculated-value" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Armas -->
+            <div class="section">
+                <h2 class="section-title">Armas</h2>
+                <div class="weapons-grid" id="weaponsGrid"></div>
+            </div>
+
+            <!-- Armadura -->
+            <div class="section">
+                <h2 class="section-title">Armadura</h2>
+                <div id="armorSection"></div>
+            </div>
+
+            <!-- Características de Classe -->
+            <div class="section">
+                <h2 class="section-title">Características de Classe</h2>
+                <div class="features-list" id="classFeatures"></div>
+            </div>
+
+            <!-- Inventário -->
+            <div class="section">
+                <h2 class="section-title">Inventário Inicial</h2>
+                <div class="inventory-grid" id="inventoryList"></div>
+                <button class="add-btn" onclick="addInventoryItem()">+ Adicionar Item</button>
+            </div>
+
+            <!-- Ouro -->
+            <div class="section">
+                <h2 class="section-title">Riqueza</h2>
+                <div class="gold-tracker">
+                    <div class="gold-box">
+                        <div class="gold-label">Punhados (Handfuls)</div>
+                        <input type="number" class="gold-value attribute-input" id="goldHandfuls" value="1" min="0">
+                    </div>
+                    <div class="gold-box">
+                        <div class="gold-label">Sacos (Bags)</div>
+                        <input type="number" class="gold-value attribute-input" id="goldBags" value="0" min="0">
+                    </div>
+                    <div class="gold-box">
+                        <div class="gold-label">Baú (Chest)</div>
+                        <input type="number" class="gold-value attribute-input" id="goldChest" value="0" min="0">
+                    </div>
+                </div>
+                <div class="info-box" style="margin-top: 20px;">
+                    💰 Conversão: 10 Punhados = 1 Saco | 10 Sacos = 1 Baú
+                </div>
+            </div>
+
+            <!-- Experiências -->
+            <div class="section">
+                <h2 class="section-title">Experiências</h2>
+                <div class="info-box">
+                    Experiências representam as habilidades e conhecimentos específicos do seu personagem. 
+                    Comece com 2 Experiências em +2. Trabalhe com o Mestre para criá-las.
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Experiência 1</label>
+                        <input type="text" id="exp1" placeholder="Ex: Combate Naval">
+                    </div>
+                    <div class="form-group">
+                        <label>Experiência 2</label>
+                        <input type="text" id="exp2" placeholder="Ex: Conhecimento de Obsidiana">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descrição do Personagem -->
+            <div class="section">
+                <h2 class="section-title">Descrição do Personagem</h2>
+                <div class="form-group">
+                    <label for="description">Aparência e Personalidade</label>
+                    <textarea id="description" placeholder="Descreva a aparência, atitude e histórico do seu personagem..."></textarea>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="actions">
+                <button class="btn" onclick="downloadPDF()">📄 Baixar Ficha em PDF</button>
+                <button class="btn btn-secondary" onclick="resetForm()">🔄 Resetar Ficha</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const classes = {
+            mago: {
+                name: "Mago",
+                icon: "🔮",
+                domains: "Codex & Esplendor",
+                attributes: { agilidade: -1, forca: 0, destreza: 0, instinto: 1, presenca: 1, conhecimento: 2 },
+                evasion: 11,
+                proficiency: 2,
+                primaryWeapon: {
+                    name: "Cajado Grande",
+                    trait: "Conhecimento",
+                    range: "Muito Distante",
+                    damage: "d6",
+                    type: "mag",
+                    features: "Duas Mãos, Poderoso: Em ataque bem-sucedido, role um dado de dano adicional e descarte o menor resultado"
+                },
+                armor: {
+                    name: "Armadura de Couro",
+                    thresholds: [6, 13, 0],
+                    score: 3
+                },
+                features: [
+                    {
+                        name: "Prestidigitação",
+                        description: "Você pode realizar efeitos mágicos sutis e inofensivos à vontade. Por exemplo, pode mudar a cor de um objeto, criar um cheiro, acender uma vela, fazer um objeto pequeno flutuar, iluminar uma sala ou reparar um objeto pequeno."
+                    },
+                    {
+                        name: "Padrões Estranhos",
+                        description: "Escolha um número entre 1 e 12. Quando rolar esse número no Dado de Dualidade, ganhe uma Esperança ou limpe um Estresse. Você pode mudar este número quando fizer um descanso longo."
+                    }
+                ],
+                inventory: [
+                    "Uma tocha",
+                    "15 metros de corda",
+                    "Suprimentos básicos",
+                    "Um punhado de ouro",
+                    "Poção Menor de Vida OU Poção Menor de Vigor",
+                    "Um livro que você está tentando traduzir OU um pequeno familiar elemental inofensivo"
+                ]
+            },
+            guerreiro: {
+                name: "Guerreiro",
+                icon: "⚔️",
+                domains: "Lâmina & Osso",
+                attributes: { agilidade: 2, forca: 1, destreza: 0, instinto: 1, presenca: -1, conhecimento: 0 },
+                evasion: 11,
+                proficiency: 2,
+                primaryWeapon: {
+                    name: "Espada Longa",
+                    trait: "Agilidade",
+                    range: "Corpo a Corpo",
+                    damage: "d8+3",
+                    type: "fís",
+                    features: "Duas Mãos"
+                },
+                armor: {
+                    name: "Cota de Malha",
+                    thresholds: [7, 15, 0],
+                    score: 4,
+                    features: "Pesada: -1 à Evasão"
+                },
+                features: [
+                    {
+                        name: "Ataque de Oportunidade",
+                        description: "Quando um adversário dentro do alcance Corpo a Corpo tentar sair desse alcance, faça uma rolagem de reação usando um atributo de sua escolha contra a Dificuldade dele. Escolha um efeito em sucesso, ou dois se obter sucesso crítico: • Eles não podem se mover de onde estão • Você causa dano igual ao dano da sua arma primária • Você se move com eles"
+                    },
+                    {
+                        name: "Treinamento em Combate",
+                        description: "Você ignora carga ao equipar armas. Quando causa dano físico, ganha um bônus na rolagem de dano igual ao seu nível."
+                    }
+                ],
+                inventory: [
+                    "Uma tocha",
+                    "15 metros de corda",
+                    "Suprimentos básicos",
+                    "Um punhado de ouro",
+                    "Poção Menor de Vida OU Poção Menor de Vigor",
+                    "O desenho de um amor OU uma pedra de amolar"
+                ]
+            },
+            feiticeiro: {
+                name: "Feiticeiro",
+                icon: "⚡",
+                domains: "Arcana & Meia-Noite",
+                attributes: { agilidade: 0, forca: -1, destreza: 1, instinto: 2, presenca: 1, conhecimento: 0 },
+                evasion: 10,
+                proficiency: 2,
+                primaryWeapon: {
+                    name: "Cajado Duplo",
+                    trait: "Instinto",
+                    range: "Distante",
+                    damage: "d6+3",
+                    type: "mag",
+                    features: "Duas Mãos"
+                },
+                armor: {
+                    name: "Gibão Acolchoado",
+                    thresholds: [5, 11, 0],
+                    score: 3,
+                    features: "Flexível: +1 à Evasão"
+                },
+                features: [
+                    {
+                        name: "Sentido Arcano",
+                        description: "Você pode sentir a presença de pessoas e objetos mágicos dentro do alcance Próximo."
+                    },
+                    {
+                        name: "Ilusão Menor",
+                        description: "Faça uma Rolagem de Conjuração (10). Em sucesso, você cria uma ilusão visual menor não maior que você mesmo dentro do alcance Próximo. Esta ilusão é convincente para qualquer um a Próximo ou mais distante."
+                    },
+                    {
+                        name: "Canalizar Poder Bruto",
+                        description: "Uma vez por descanso longo, você pode colocar uma carta de domínio da sua carga no cofre e escolher: • Ganhar Esperança igual ao nível da carta • Melhorar uma magia que causa dano, ganhando bônus na rolagem de dano igual a duas vezes o nível da carta"
+                    }
+                ],
+                inventory: [
+                    "Uma tocha",
+                    "15 metros de corda",
+                    "Suprimentos básicos",
+                    "Um punhado de ouro",
+                    "Poção Menor de Vida OU Poção Menor de Vigor",
+                    "Um orbe sussurrante OU uma herança de família"
+                ]
+            },
+            serafim: {
+                name: "Serafim",
+                icon: "👼",
+                domains: "Esplendor & Valor",
+                attributes: { agilidade: 0, forca: 2, destreza: 0, instinto: 1, presenca: 1, conhecimento: -1 },
+                evasion: 9,
+                proficiency: 2,
+                primaryWeapon: {
+                    name: "Machado Sagrado",
+                    trait: "Força",
+                    range: "Corpo a Corpo",
+                    damage: "d8+1",
+                    type: "mag",
+                    features: "Uma Mão"
+                },
+                secondaryWeapon: {
+                    name: "Escudo Redondo",
+                    trait: "Força",
+                    range: "Corpo a Corpo",
+                    damage: "d4",
+                    type: "fís",
+                    features: "Uma Mão, Protetor: +1 à Pontuação de Armadura"
+                },
+                armor: {
+                    name: "Cota de Malha",
+                    thresholds: [7, 15, 0],
+                    score: 4,
+                    features: "Pesada: -1 à Evasão"
+                },
+                features: [
+                    {
+                        name: "Dados de Prece",
+                        description: "No início de cada sessão, role um número de d4s igual ao atributo de Conjuração da sua subclasse e coloque-os nesta ficha no espaço fornecido. Estes são seus Dados de Prece. Você pode gastar qualquer número de Dados de Prece para ajudar a si mesmo ou um aliado dentro do alcance Distante. Pode usar o valor de um dado gasto para reduzir dano recebido, adicionar ao resultado de uma rolagem após ela ser feita, ou ganhar Esperança igual ao resultado. No final de cada sessão, limpe todos os Dados de Prece não gastos."
+                    }
+                ],
+                inventory: [
+                    "Uma tocha",
+                    "15 metros de corda",
+                    "Suprimentos básicos",
+                    "Um punhado de ouro",
+                    "Poção Menor de Vida OU Poção Menor de Vigor",
+                    "Um pacote de oferendas OU um símbolo do seu deus"
+                ]
+            },
+            ladino: {
+                name: "Ladino",
+                icon: "🗡️",
+                domains: "Meia-Noite & Graça",
+                attributes: { agilidade: 1, forca: -1, destreza: 2, instinto: 0, presenca: 1, conhecimento: 0 },
+                evasion: 12,
+                proficiency: 2,
+                primaryWeapon: {
+                    name: "Adaga",
+                    trait: "Destreza",
+                    range: "Corpo a Corpo",
+                    damage: "d8+1",
+                    type: "fís",
+                    features: "Uma Mão"
+                },
+                secondaryWeapon: {
+                    name: "Adaga Pequena",
+                    trait: "Destreza",
+                    range: "Corpo a Corpo",
+                    damage: "d8",
+                    type: "fís",
+                    features: "Uma Mão, Pareado: +2 ao dano da arma primária contra alvos dentro do alcance Corpo a Corpo"
+                },
+                armor: {
+                    name: "Gibão Acolchoado",
+                    thresholds: [5, 11, 0],
+                    score: 3,
+                    features: "Flexível: +1 à Evasão"
+                },
+                features: [
+                    {
+                        name: "Encoberto",
+                        description: "Sempre que você estaria Oculto, está Encoberto. Além dos benefícios da condição Oculto, enquanto Encoberto você permanece invisível se estiver parado quando um adversário se mover para onde normalmente o veria. Após fazer um ataque ou terminar um movimento na linha de visão de um adversário, você não está mais Encoberto."
+                    },
+                    {
+                        name: "Ataque Furtivo",
+                        description: "Quando você tem sucesso em um ataque enquanto Encoberto ou enquanto um aliado está dentro do alcance Corpo a Corpo do seu alvo, adicione um número de d6s igual à sua graduação à sua rolagem de dano. Nível 1 é Graduação 1, Níveis 2-4 são Graduação 2, Níveis 5-7 são Graduação 3, Níveis 8-10 são Graduação 4."
+                    }
+                ],
+                inventory: [
+                    "Uma tocha",
+                    "15 metros de corda",
+                    "Suprimentos básicos",
+                    "Um punhado de ouro",
+                    "Poção Menor de Vida OU Poção Menor de Vigor",
+                    "Um conjunto de ferramentas de falsificação OU um gancho de escalada"
+                ]
+            },
+            patrulheiro: {
+                name: "Patrulheiro",
+                icon: "🏹",
+                domains: "Osso & Sábio",
+                attributes: { agilidade: 2, forca: 0, destreza: 1, instinto: 1, presenca: -1, conhecimento: 0 },
+                evasion: 12,
+                proficiency: 2,
+                primaryWeapon: {
+                    name: "Arco Curto",
+                    trait: "Agilidade",
+                    range: "Distante",
+                    damage: "d6+3",
+                    type: "fís",
+                    features: "Duas Mãos"
+                },
+                armor: {
+                    name: "Armadura de Couro",
+                    thresholds: [6, 13, 0],
+                    score: 3
+                },
+                features: [
+                    {
+                        name: "Foco do Patrulheiro",
+                        description: "Gaste uma Esperança e faça um ataque contra um alvo. Em sucesso, cause o dano normal do ataque e torne temporariamente o alvo seu Foco. Até que este recurso termine ou você faça de outra criatura seu Foco, você ganha os seguintes benefícios contra seu Foco: • Você sabe precisamente em que direção eles estão • Quando causar dano a eles, eles devem marcar um Estresse • Quando falhar em um ataque contra eles, pode terminar seu Foco do Patrulheiro para rerolar seus Dados de Dualidade"
+                    }
+                ],
+                inventory: [
+                    "Uma tocha",
+                    "15 metros de corda",
+                    "Suprimentos básicos",
+                    "Um punhado de ouro",
+                    "Poção Menor de Vida OU Poção Menor de Vigor",
+                    "Um troféu da sua primeira caça OU uma bússola aparentemente quebrada"
+                ]
+            },
+            guardiao: {
+                name: "Guardião",
+                icon: "🛡️",
+                domains: "Valor & Lâmina",
+                attributes: { agilidade: 1, forca: 2, destreza: -1, instinto: 0, presenca: 1, conhecimento: 0 },
+                evasion: 9,
+                proficiency: 2,
+                primaryWeapon: {
+                    name: "Machado de Batalha",
+                    trait: "Força",
+                    range: "Corpo a Corpo",
+                    damage: "d10+3",
+                    type: "fís",
+                    features: "Duas Mãos"
+                },
+                armor: {
+                    name: "Cota de Malha",
+                    thresholds: [7, 15, 0],
+                    score: 4,
+                    features: "Pesada: -1 à Evasão"
+                },
+                features: [
+                    {
+                        name: "Imparável",
+                        description: "Uma vez por descanso longo, você pode se tornar Imparável. Você ganha um Dado Imparável. No nível 1, seu Dado Imparável é um d4. Coloque-o nesta ficha começando com o valor 1 virado para cima. Após fazer uma rolagem de dano que causa 1 ou mais Pontos de Vida a um alvo, aumente o valor do Dado Imparável em um. Quando o valor do dado exceder seu valor máximo ou quando a cena terminar, remova o dado e saia de Imparável. No nível 5, seu Dado Imparável aumenta para d6. Enquanto Imparável: • Você reduz a severidade do dano físico em um limiar (Severo para Maior, Maior para Menor, Menor para Nenhum) • Você adiciona o valor atual do Dado Imparável à sua rolagem de dano • Você não pode ficar Contido ou Vulnerável"
+                    }
+                ],
+                inventory: [
+                    "Uma tocha",
+                    "15 metros de corda",
+                    "Suprimentos básicos",
+                    "Um punhado de ouro",
+                    "Poção Menor de Vida OU Poção Menor de Vigor",
+                    "Um totem do seu mentor OU uma chave secreta"
+                ]
+            },
+            druida: {
+                name: "Druida",
+                icon: "🌿",
+                domains: "Sábio & Arcana",
+                attributes: { agilidade: 1, forca: 0, destreza: 1, instinto: 2, presenca: -1, conhecimento: 0 },
+                evasion: 10,
+                proficiency: 2,
+                primaryWeapon: {
+                    name: "Cajado Curto",
+                    trait: "Instinto",
+                    range: "Próximo",
+                    damage: "d8+1",
+                    type: "mag",
+                    features: "Uma Mão"
+                },
+                secondaryWeapon: {
+                    name: "Escudo Redondo",
+                    trait: "Força",
+                    range: "Corpo a Corpo",
+                    damage: "d4",
+                    type: "fís",
+                    features: "Uma Mão, Protetor: +1 à Pontuação de Armadura"
+                },
+                armor: {
+                    name: "Armadura de Couro",
+                    thresholds: [6, 13, 0],
+                    score: 3
+                },
+                features: [
+                    {
+                        name: "Forma Bestial",
+                        description: "Marque um Estresse para se transformar magicamente em uma criatura da sua graduação ou menor da lista de Formas Bestiais. Você pode sair desta forma a qualquer momento. Enquanto transformado, não pode usar armas ou conjurar magias de cartas de domínio, mas ainda pode usar outros recursos ou habilidades que tem acesso. Magias conjuradas antes de transformar permanecem ativas e duram sua duração normal, e você pode falar e se comunicar normalmente. Além disso, ganha os recursos da Forma Bestial, adiciona o bônus de Evasão dela à sua Evasão, e usa o atributo especificado nas estatísticas para seu ataque. Enquanto em Forma Bestial, sua armadura se torna parte do seu corpo e você marca Espaços de Armadura normalmente; quando sair da Forma Bestial, esses Espaços de Armadura marcados permanecem marcados. Se marcar seu último Ponto de Vida, automaticamente sai desta forma."
+                    },
+                    {
+                        name: "Toque Selvagem",
+                        description: "Você pode realizar efeitos sutis e inofensivos que envolvem natureza—como fazer uma flor crescer rapidamente, invocar uma leve brisa, ou iniciar uma fogueira—à vontade."
+                    }
+                ],
+                inventory: [
+                    "Uma tocha",
+                    "15 metros de corda",
+                    "Suprimentos básicos",
+                    "Um punhado de ouro",
+                    "Poção Menor de Vida OU Poção Menor de Vigor",
+                    "Um pequeno saco de pedras e ossos OU um pingente estranho encontrado na terra"
+                ]
+            },
+            bardo: {
+                name: "Bardo",
+                icon: "🎵",
+                domains: "Graça & Codex",
+                attributes: { agilidade: 0, forca: -1, destreza: 1, instinto: 0, presenca: 2, conhecimento: 1 },
+                evasion: 10,
+                proficiency: 2,
+                primaryWeapon: {
+                    name: "Estoque",
+                    trait: "Presença",
+                    range: "Corpo a Corpo",
+                    damage: "d8",
+                    type: "fís",
+                    features: "Uma Mão, Rápido: Ao fazer um ataque, pode marcar um Estresse para mirar em outra criatura dentro do alcance"
+                },
+                secondaryWeapon: {
+                    name: "Adaga Pequena",
+                    trait: "Destreza",
+                    range: "Corpo a Corpo",
+                    damage: "d8",
+                    type: "fís",
+                    features: "Uma Mão, Pareado: +2 ao dano da arma primária contra alvos dentro do alcance Corpo a Corpo"
+                },
+                armor: {
+                    name: "Gibão Acolchoado",
+                    thresholds: [5, 11, 0],
+                    score: 3,
+                    features: "Flexível: +1 à Evasão"
+                },
+                features: [
+                    {
+                        name: "Reunir",
+                        description: "Uma vez por sessão, descreva como você reúne o grupo e dê a si mesmo e a cada um dos seus aliados um Dado de Reunião. No nível 1, seu Dado de Reunião é um d6. Um PJ pode gastar seu Dado de Reunião para rolá-lo, adicionando o resultado à sua rolagem de ação, rolagem de reação, rolagem de dano, ou para limpar um número de Estresse igual ao resultado. No final de cada sessão, limpe todos os Dados de Reunião não gastos. No nível 5, seu Dado de Reunião aumenta para d8."
+                    }
+                ],
+                inventory: [
+                    "Uma tocha",
+                    "15 metros de corda",
+                    "Suprimentos básicos",
+                    "Um punhado de ouro",
+                    "Poção Menor de Vida OU Poção Menor de Vigor",
+                    "Um romance OU uma carta nunca aberta"
+                ]
+            }
+        };
+
+        let selectedClass = null;
+        let currentData = {};
+
+        // Inicializar grade de classes
+        function initClassGrid() {
+            const grid = document.getElementById('classGrid');
+            for (let [key, classData] of Object.entries(classes)) {
+                const card = document.createElement('div');
+                card.className = 'class-card';
+                card.onclick = () => selectClass(key);
+                card.innerHTML = `
+                    <div class="class-icon">${classData.icon}</div>
+                    <div class="class-name">${classData.name}</div>
+                    <div class="class-domains">${classData.domains}</div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        function selectClass(classKey) {
+            selectedClass = classKey;
+            const classData = classes[classKey];
+            
+            // Atualizar UI de seleção
+            document.querySelectorAll('.class-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Mostrar ficha
+            document.getElementById('characterSheet').classList.add('active');
+            
+            // Preencher dados
+            populateSheet(classData);
+            
+            // Scroll suave
+            document.getElementById('characterSheet').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function populateSheet(classData) {
+            // Limpar subclasse
+            document.getElementById('subclass').value = classData.domains;
+            
+            // Atributos
+            const attributesGrid = document.getElementById('attributesGrid');
+            attributesGrid.innerHTML = '';
+            
+            const attributeNames = {
+                agilidade: 'Agilidade',
+                forca: 'Força',
+                destreza: 'Destreza',
+                instinto: 'Instinto',
+                presenca: 'Presença',
+                conhecimento: 'Conhecimento'
+            };
+            
+            for (let [key, name] of Object.entries(attributeNames)) {
+                const value = classData.attributes[key];
+                const box = document.createElement('div');
+                box.className = 'attribute-box';
+                box.innerHTML = `
+                    <div class="attribute-name">${name}</div>
+                    <input type="number" class="attribute-input" id="attr_${key}" 
+                           value="${value}" min="-2" max="3" 
+                           onchange="calculateValues()">
+                `;
+                attributesGrid.appendChild(box);
+            }
+            
+            // Valores calculados iniciais
+            document.getElementById('proficiency').value = classData.proficiency;
+            calculateValues();
+            
+            // Armas
+            const weaponsGrid = document.getElementById('weaponsGrid');
+            weaponsGrid.innerHTML = `
+                <div class="weapon-card">
+                    <div class="weapon-title">Arma Primária</div>
+                    <div class="form-group">
+                        <label>Nome</label>
+                        <input type="text" id="primaryWeaponName" value="${classData.primaryWeapon.name}">
+                    </div>
+                    <div class="form-group">
+                        <label>Atributo</label>
+                        <input type="text" id="primaryWeaponTrait" value="${classData.primaryWeapon.trait}">
+                    </div>
+                    <div class="form-group">
+                        <label>Alcance</label>
+                        <input type="text" id="primaryWeaponRange" value="${classData.primaryWeapon.range}">
+                    </div>
+                    <div class="form-group">
+                        <label>Dano</label>
+                        <input type="text" id="primaryWeaponDamage" value="${classData.primaryWeapon.damage}">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <input type="text" id="primaryWeaponType" value="${classData.primaryWeapon.type}">
+                    </div>
+                    <div class="form-group">
+                        <label>Características</label>
+                        <textarea id="primaryWeaponFeatures">${classData.primaryWeapon.features}</textarea>
+                    </div>
+                </div>
+            `;
+            
+            if (classData.secondaryWeapon) {
+                weaponsGrid.innerHTML += `
+                    <div class="weapon-card">
+                        <div class="weapon-title">Arma Secundária</div>
+                        <div class="form-group">
+                            <label>Nome</label>
+                            <input type="text" id="secondaryWeaponName" value="${classData.secondaryWeapon.name}">
+                        </div>
+                        <div class="form-group">
+                            <label>Atributo</label>
+                            <input type="text" id="secondaryWeaponTrait" value="${classData.secondaryWeapon.trait}">
+                        </div>
+                        <div class="form-group">
+                            <label>Alcance</label>
+                            <input type="text" id="secondaryWeaponRange" value="${classData.secondaryWeapon.range}">
+                        </div>
+                        <div class="form-group">
+                            <label>Dano</label>
+                            <input type="text" id="secondaryWeaponDamage" value="${classData.secondaryWeapon.damage}">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <input type="text" id="secondaryWeaponType" value="${classData.secondaryWeapon.type}">
+                        </div>
+                        <div class="form-group">
+                            <label>Características</label>
+                            <textarea id="secondaryWeaponFeatures">${classData.secondaryWeapon.features}</textarea>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Armadura
+            const armorSection = document.getElementById('armorSection');
+            armorSection.innerHTML = `
+                <div class="weapon-card">
+                    <div class="form-group">
+                        <label>Nome da Armadura</label>
+                        <input type="text" id="armorName" value="${classData.armor.name}">
+                    </div>
+                    <div class="form-group">
+                        <label>Características</label>
+                        <textarea id="armorFeatures">${classData.armor.features || 'Nenhuma característica especial'}</textarea>
+                    </div>
+                </div>
+            `;
+            
+            // Características de classe
+            const featuresDiv = document.getElementById('classFeatures');
+            featuresDiv.innerHTML = classData.features.map(feature => `
+                <div class="feature-item">
+                    <div class="feature-name">${feature.name}</div>
+                    <div class="feature-description">${feature.description}</div>
+                </div>
+            `).join('');
+            
+            // Inventário
+            const inventoryList = document.getElementById('inventoryList');
+            inventoryList.innerHTML = classData.inventory.map((item, index) => `
+                <div class="inventory-item" id="inv_${index}">
+                    <span>${item}</span>
+                    <button class="remove-btn" onclick="removeInventoryItem(${index})">Remover</button>
+                </div>
+            `).join('');
+        }
+
+        function calculateValues() {
+            if (!selectedClass) return;
+            
+            const classData = classes[selectedClass];
+            const level = parseInt(document.getElementById('level').value) || 1;
+            
+            // Evasão base + modificadores de armadura
+            let evasion = classData.evasion;
+            if (classData.armor.features && classData.armor.features.includes('Flexível')) {
+                evasion += 1;
+            }
+            if (classData.armor.features && classData.armor.features.includes('Pesada')) {
+                evasion -= 1;
+            }
+            document.getElementById('evasion').value = evasion;
+            
+            // Armadura
+            let armorScore = classData.armor.score;
+            if (classData.secondaryWeapon && classData.secondaryWeapon.features && 
+                classData.secondaryWeapon.features.includes('Protetor')) {
+                armorScore += 1;
+            }
+            document.getElementById('armorScore').value = armorScore;
+            
+            // Limiares de dano (base + nível)
+            document.getElementById('threshold1').value = classData.armor.thresholds[0] + level;
+            document.getElementById('threshold2').value = classData.armor.thresholds[1] + level;
+            document.getElementById('threshold3').value = (classData.armor.thresholds[2] || 0) + level;
+        }
+
+        function addInventoryItem() {
+            const inventoryList = document.getElementById('inventoryList');
+            const newItem = prompt('Digite o nome do novo item:');
+            if (newItem) {
+                const index = inventoryList.children.length;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'inventory-item';
+                itemDiv.id = `inv_${index}`;
+                itemDiv.innerHTML = `
+                    <span>${newItem}</span>
+                    <button class="remove-btn" onclick="removeInventoryItem(${index})">Remover</button>
+                `;
+                inventoryList.appendChild(itemDiv);
+            }
+        }
+
+        function removeInventoryItem(index) {
+            const item = document.getElementById(`inv_${index}`);
+            if (item) {
+                item.remove();
+            }
+        }
+
+        function resetForm() {
+            if (confirm('Tem certeza que deseja resetar toda a ficha?')) {
+                document.getElementById('characterSheet').classList.remove('active');
+                document.querySelectorAll('.class-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                selectedClass = null;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('characterSheet');
+            const charName = document.getElementById('charName').value || 'Personagem';
+            const classData = classes[selectedClass];
+            
+            const opt = {
+                margin: 10,
+                filename: `Ficha_${charName}_${classData.name}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Esconder botões antes de gerar PDF
+            const actions = document.querySelector('.actions');
+            actions.style.display = 'none';
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                actions.style.display = 'block';
+            });
+        }
+
+        // Inicializar ao carregar
+        window.onload = () => {
+            initClassGrid();
+        };
+
+        // Atualizar valores quando o nível mudar
+        document.getElementById('level')?.addEventListener('change', calculateValues);
+    </script>
+</body>
+</html>
